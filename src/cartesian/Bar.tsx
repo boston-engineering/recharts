@@ -79,6 +79,7 @@ export interface BarProps extends InternalBarProps {
   maxBarSize?: number;
   hide?: boolean;
   shape?: ActiveShape<BarProps, SVGPathElement>;
+  rectangleKeyGenerator?: (barData: (BarRectangleItem & Record<string, any>) | undefined, idx: number) => string;
   activeBar?: ActiveShape<BarProps, SVGPathElement>;
   background?: ActiveShape<BarProps, SVGPathElement>;
   radius?: number | [number, number, number, number];
@@ -269,6 +270,10 @@ export class Bar extends PureComponent<Props, State> {
 
   id = uniqueId('recharts-bar-');
 
+  static defaultRectangleKeyGenerator(entry?: BarRectangleItem) {
+    return `rectangle-${entry?.x}-${entry?.y}-${entry?.value}`;
+  }
+
   handleAnimationEnd = () => {
     const { onAnimationEnd } = this.props;
     this.setState({ isAnimationFinished: true });
@@ -288,8 +293,9 @@ export class Bar extends PureComponent<Props, State> {
   };
 
   renderRectanglesStatically(data: BarRectangleItem[]) {
-    const { shape, dataKey, activeIndex, activeBar } = this.props;
+    const { shape, rectangleKeyGenerator, dataKey, activeIndex, activeBar } = this.props;
     const baseProps = filterProps(this.props, false);
+    const keyGenerator = rectangleKeyGenerator ?? Bar.defaultRectangleKeyGenerator;
 
     return (
       data &&
@@ -310,7 +316,7 @@ export class Bar extends PureComponent<Props, State> {
           <Layer
             className="recharts-bar-rectangle"
             {...adaptEventsOfChild(this.props, entry, i)}
-            key={`rectangle-${entry?.x}-${entry?.y}-${entry?.value}`}
+            key={keyGenerator(props, i)}
           >
             <BarRectangle {...props} />
           </Layer>
